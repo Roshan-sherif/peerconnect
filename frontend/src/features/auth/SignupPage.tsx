@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuthStore } from "@/store/authStore";
-
+import axios from 'axios'
+ 
 const signupSchema = z.object({
   fullName: z.string().min(2, { message: "Full name is required" }),
   email: z.string().email({ message: "Invalid email address" }),
@@ -32,11 +33,10 @@ const SignupPage = () => {
   });
 
   const onSubmit = async (data: SignupFormValues) => {
-    // Mock signup
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    login({ id: "1", name: data.fullName, email: data.email });
-    navigate("/dashboard");
+    const responce= axios.post('http://localhost:5000/api/auth/signup' , data)
+    console.log(data)
   };
+
 
   return (
     <div className="w-full">
