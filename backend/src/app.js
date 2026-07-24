@@ -4,8 +4,10 @@ const helmet = require("helmet");
 const morgan = require("morgan");
 require("dotenv").config();
 
+
 const authRoutes=require('./routes/auth.routes')
 const app = express();
+
 
 app.use(cors());
 app.use(helmet());

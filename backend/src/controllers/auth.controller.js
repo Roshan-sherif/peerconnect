@@ -7,6 +7,7 @@ const signup=async(req,res)=>{
     try{
         const data=signupSchema.parse(req.body)
         const result=await signupUser(data)
+        console.log('asfd')
 
         res.status(201).json({
             success:true,
@@ -14,6 +15,7 @@ const signup=async(req,res)=>{
             ...result,
         })
     }catch (error) {
+        console.log(error)
 
         res.status(400).json({
             success: false,
