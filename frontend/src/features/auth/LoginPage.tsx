@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuthStore } from "@/store/authStore";
+import { loginUser } from "../../api/auth.api";
+import { useState } from "react";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
@@ -13,8 +15,9 @@ const loginSchema = z.object({
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
-
+const [serverError, setServerError] = useState("");
 const LoginPage = () => {
+  
   const navigate = useNavigate();
   const login = useAuthStore(state => state.login);
   
@@ -27,10 +30,20 @@ const LoginPage = () => {
   });
 
   const onSubmit = async (data: LoginFormValues) => {
-    // Mock login
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    login({ id: "1", name: "Alex Kumar", email: data.email });
+    setServerError('')
+  try {
+    const response = await loginUser(data);
+
+    login(response.data.user);
+
     navigate("/dashboard");
+
+  } catch (error: any) {
+    console.error(error);
+setServerError(error)
+    alert(error.response?.data?.message || "Login failed");
+  }
+
   };
 
   return (
@@ -73,6 +86,12 @@ const LoginPage = () => {
             <p className="text-sm text-destructive">{errors.password.message}</p>
           )}
         </div>
+
+        {serverError && (
+  <p className="text-sm text-red-500 font-medium">
+    {serverError}
+  </p>
+)}
 
         <div className="flex items-center space-x-2">
           <input type="checkbox" id="remember" className="rounded border-slate-300 text-primary focus:ring-primary h-4 w-4" />

@@ -1,5 +1,5 @@
-const { signupSchema } = require("../validators/auth.validator")
-const { signupUser } = require("../services/auth.service");
+const { signupSchema, loginSchema } = require("../validators/auth.validator")
+const { signupUser, loginUser } = require("../services/auth.service");
 
 
 const signup=async(req,res)=>{
@@ -40,6 +40,63 @@ const signup=async(req,res)=>{
 
 }
 
+const login= async(req,res)=>{
+
+        try {
+        const data=loginSchema.parse(req.body)
+        const {user,token} = await loginUser(data)
+
+
+                    res.cookie('token',token,{
+            httpOnly:true,
+            secure:false,
+            sameSite:'lax',
+            maxAge:7*24*60*60*1000,
+
+        })
+
+        
+        res.status(200).json({
+            success:true,
+            message:'Account logged successfully',
+                        user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+            },
+
+        })
+
+        } catch (error) {
+                    console.log(error)
+
+        if (error.message === "Invalid email or password") {
+            return res.status(401).json({
+                success: false,
+                message: error.message,
+            });
+        }
+
+        // Validation error
+        if (error.name === "ZodError") {
+            return res.status(400).json({
+                success: false,
+                message: error.errors[0].message,
+            });
+        }
+
+        // Unknown error
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error",
+        });
+
+            
+        }
+        
+}
+
 module.exports = {
     signup,
+    login
 };
