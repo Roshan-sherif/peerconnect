@@ -15,8 +15,10 @@ const loginSchema = z.object({
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
-const [serverError, setServerError] = useState("");
 const LoginPage = () => {
+
+  const [serverError, setServerError] = useState("");
+
   
   const navigate = useNavigate();
   const login = useAuthStore(state => state.login);
