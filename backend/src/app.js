@@ -7,6 +7,7 @@ require("dotenv").config();
 
 
 const authRoutes=require('./routes/auth.routes')
+const authMiddleware=require('./middleware/auth.middleware')
 const app = express();
 
 app.use(
@@ -22,7 +23,7 @@ app.use(morgan("dev"));
 app.use(express.json());
 app.use(cookieParser())
 
-
 app.use('/api/auth',authRoutes)
+
 
 module.exports = app;

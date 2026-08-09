@@ -47,7 +47,7 @@ const login= async(req,res)=>{
         const {user,token} = await loginUser(data)
 
 
-                    res.cookie('token',token,{
+            res.cookie('token',token,{
             httpOnly:true,
             secure:false,
             sameSite:'lax',
@@ -95,6 +95,7 @@ const login= async(req,res)=>{
         }
         
 }
+
 const logout=async(req,res)=>{
     res.clearCookie("token");
 
@@ -102,9 +103,24 @@ res.status(200).json({
     success: true,
     message: "Logged out successfully",
 });
+
+
+
 }
+const getCurrentUser = (req, res) => {
+    res.status(200).json({
+        success: true,
+        user: {
+            id: req.user.id,
+            name: req.user.name,
+            email: req.user.email,
+        },
+    });
+};
+
 module.exports = {
     signup,
     login,
-    logout
+    logout,
+    getCurrentUser
 };

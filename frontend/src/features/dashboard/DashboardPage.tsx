@@ -4,8 +4,35 @@ import { Plus, ArrowRight, Clock, Users, Play, MoreVertical } from "lucide-react
 import { useAuthStore } from "@/store/authStore";
 import { CreateRoomModal } from "./components/CreateRoomModal";
 import { JoinRoomModal } from "./components/JoinRoomModal";
+import { useEffect } from "react";
+import { getCurrentUser } from "../../api/auth.api";
+import { useNavigate } from "react-router-dom";
+
 
 const DashboardPage = () => {
+
+  const navigate=useNavigate()
+  
+useEffect(() => {
+    const checkAuth = async () => {
+        try {
+            const response = await getCurrentUser();
+
+            console.log("AUTH RESPONSE:", response);
+
+            if (!response.data.success) {
+                navigate("/login");
+            }
+
+        } catch (error) {
+            console.log("Not authenticated");
+            navigate("/login");
+        }
+    };
+
+    checkAuth();
+}, [navigate]);
+
   const user = useAuthStore(state => state.user);
 
   const stats = [
