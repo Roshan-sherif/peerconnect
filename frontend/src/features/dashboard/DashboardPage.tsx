@@ -11,27 +11,7 @@ import { useNavigate } from "react-router-dom";
 
 const DashboardPage = () => {
 
-  const navigate=useNavigate()
   
-useEffect(() => {
-    const checkAuth = async () => {
-        try {
-            const response = await getCurrentUser();
-
-            console.log("AUTH RESPONSE:", response);
-
-             if (!response.data.success) {
-                await navigate("/login");
-            }
-
-        } catch (error) {
-            console.log("Not authenticated");
-            navigate("/login");
-        }
-    };
-
-    checkAuth();
-}, [navigate]);
 
   const user = useAuthStore(state => state.user);
 

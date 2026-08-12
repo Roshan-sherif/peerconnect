@@ -15,4 +15,9 @@ export const getCurrentUser = () => {
       withCredentials: true,
     }
   );
+
 };
+
+export const logout = (userData) => API.post("/auth/logout", 
+    {withCredentials:true}
+);

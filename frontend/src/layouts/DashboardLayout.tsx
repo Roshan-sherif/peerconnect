@@ -1,11 +1,27 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { Code2, LayoutDashboard, MessageSquare, Calendar, Bell, User, Settings, LogOut } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
+import { logout } from "../api/auth.api";
+
 
 const DashboardLayout = () => {
   const location = useLocation();
-  const logout = useAuthStore(state => state.logout);
   const user = useAuthStore(state => state.user);
+  const logOutUser = useAuthStore(state => state.logout);
+
+
+  const logOut = async()=>{
+    try {
+          const responce = await logout()
+          logOutUser()
+    console.log(responce)
+
+      
+    } catch (error) {
+      console.log(error)
+      
+    }
+  }
 
   const navItems = [
     { name: "Dashboard", path: "/dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
@@ -54,7 +70,7 @@ const DashboardLayout = () => {
 
         <div className="p-4 border-t border-slate-100">
           <button 
-            onClick={logout}
+            onClick={logOut}
             className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-destructive transition-colors"
           >
             <LogOut className="w-5 h-5" />
