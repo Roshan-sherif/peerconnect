@@ -20,8 +20,8 @@ useEffect(() => {
 
             console.log("AUTH RESPONSE:", response);
 
-            if (!response.data.success) {
-                navigate("/login");
+             if (!response.data.success) {
+                await navigate("/login");
             }
 
         } catch (error) {
