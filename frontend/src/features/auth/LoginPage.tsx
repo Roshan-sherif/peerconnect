@@ -41,6 +41,7 @@ const LoginPage = () => {
     navigate("/dashboard");
 
   } catch (error: any) {
+
     console.error(error);
 setServerError(error)
     alert(error.response?.data?.message || "Login failed");

@@ -31,8 +31,8 @@ const ProfilePage = () => {
               <div className="flex-1 text-center sm:text-left">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
                   <div>
-                    <h2 className="text-2xl font-bold text-slate-900">{user?.name || "Alex Kumar"}</h2>
-                    <p className="text-slate-500">alex.kumar@example.com</p>
+                    <h2 className="text-2xl font-bold text-slate-900">{user?.name || ""}</h2>
+                    <p className="text-slate-500">{user?.email}</p>
                   </div>
                   <Button variant="outline">Edit Profile</Button>
                 </div>
