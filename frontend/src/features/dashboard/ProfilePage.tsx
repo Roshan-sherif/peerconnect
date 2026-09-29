@@ -3,9 +3,19 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuthStore } from "@/store/authStore";
 import { MapPin, Code2, Users, Clock, Calendar as CalendarIcon, CheckCircle2 } from "lucide-react";
+import { useEffect } from "react";
+import { getUser } from "../../api/user.api";
+
 
 const ProfilePage = () => {
   const user = useAuthStore(state => state.user);
+useEffect(()=>{
+  const fetchUserData=async()=>{
+  const responce = await getUser()
+
+  }
+})
+
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">

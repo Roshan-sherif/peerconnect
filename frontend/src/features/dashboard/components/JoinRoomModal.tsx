@@ -14,14 +14,8 @@ export function JoinRoomModal({ children }: { children: React.ReactNode }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const finalId = roomId || code.join("");
-    if (!finalId) return;
-
-    setIsSubmitting(true);
-    // Mock join room
-    await new Promise(resolve => setTimeout(resolve, 800));
-    setOpen(false);
-    navigate(`/room/${finalId}`);
+    console.log(e)
+    navigate(`/room/`);
   };
 
   const handleCodeChange = (index: number, value: string) => {

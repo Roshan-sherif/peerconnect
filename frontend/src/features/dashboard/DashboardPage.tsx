@@ -8,10 +8,7 @@ import { useEffect } from "react";
 import { getCurrentUser } from "../../api/auth.api";
 import { useNavigate } from "react-router-dom";
 
-
 const DashboardPage = () => {
-
-  
 
   const user = useAuthStore(state => state.user);
 

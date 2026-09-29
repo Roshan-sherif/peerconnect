@@ -4,3 +4,5 @@ Handle expired/invalid cookie without requiring refresh
  Handle 401 globally with Axios interceptor
  Loading state during authentication initialization
  Auth error handling
+
+Profile - incomplete

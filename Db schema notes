@@ -1,0 +1,59 @@
+User
+────────────────────
+id
+name
+email
+password
+createdAt
+updatedAt
+
+Room
+────────────────────────
+id
+name
+description
+ownerId
+createdAt
+updatedAt
+
+_________________________
+
+RoomMember
+├── id
+├── roomId
+├── userId
+├── role
+└── joinedAt
+______________________________________________________________________________________
+
+                         ┌──────────────┐
+                         │     USER     │
+                         ├──────────────┤
+                         │ id           │
+                         │ name         │
+                         │ email        │
+                         │ password     │
+                         │ createdAt    │
+                         │ updatedAt    │
+                         └──────┬───────┘
+                                │
+                  ┌─────────────┴─────────────┐
+                  │                           │
+              owns │                       belongs
+                  │                           │
+                  ▼                           ▼
+          ┌──────────────┐            ┌────────────────┐
+          │     ROOM     │            │  ROOM_MEMBER   │
+          ├──────────────┤            ├────────────────┤
+          │ id           │◄───────────│ roomId         │
+          │ name         │            │ userId         │
+          │ description  │            │ role           │
+          │ ownerId      │            │ joinedAt       │
+          │ createdAt    │            └───────┬────────┘
+          │ updatedAt    │                    │
+          └──────┬───────┘                    │
+                 │                            │
+                 │                            ▼
+                 │                       ┌──────────────┐
+                 └──────────────────────►│     USER     │
+                                         └──────────────┘

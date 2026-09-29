@@ -7,7 +7,8 @@ require("dotenv").config();
 
 
 const authRoutes=require('./routes/auth.routes')
-const authMiddleware=require('./middleware/auth.middleware')
+const roomRoutes=require('./routes/room.routes')
+const { room } = require("./config/prisma");
 const app = express();
 
 app.use(
@@ -24,6 +25,7 @@ app.use(express.json());
 app.use(cookieParser())
 
 app.use('/api/auth',authRoutes)
+app.use('/api/room',roomRoutes)
 
 
 module.exports = app;
