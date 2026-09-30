@@ -46,8 +46,9 @@ export function CreateRoomModal({
 
       console.log("Room created:", response);
 
+
       // Use the actual room ID returned by backend
-      navigate(`/room/${response.room.id}`);
+      navigate(`/room/${response.data.room.inviteCode}`);
 
       setOpen(false);
     } catch (error) {
