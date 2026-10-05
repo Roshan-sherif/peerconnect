@@ -4,6 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { joinRoom } from "../../../api/room.api.js";
+
+
 
 export function JoinRoomModal({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
@@ -15,6 +18,9 @@ export function JoinRoomModal({ children }: { children: React.ReactNode }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log(e)
+    console.log(roomId)
+    const responce = await joinRoom(roomId)
+    console.log(responce)
     navigate(`/room/`);
   };
 

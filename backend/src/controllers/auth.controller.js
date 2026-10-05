@@ -13,7 +13,6 @@ const signup=async(req,res)=>{
             secure:false,
             sameSite:'lax',
             maxAge:7*24*60*60*1000,
-
         })
 
         
@@ -103,10 +102,8 @@ res.status(200).json({
     success: true,
     message: "Logged out successfully",
 });
-
-
-
 }
+
 const getCurrentUser = (req, res) => {
     res.status(200).json({
         success: true,
@@ -117,6 +114,7 @@ const getCurrentUser = (req, res) => {
         },
     });
 };
+
 
 module.exports = {
     signup,

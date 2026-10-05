@@ -50,8 +50,50 @@ const createRoom = async ({ name, description, userId }) => {
     });
 
     return room;
-};
+}
+
+const joinRoom= async(data)=>{
+const room= await prisma.room.findUnique({
+    
+    where:{
+        inviteCode:data.inviteCode
+    }
+
+})
+console.log(room)
+console.log(data)
+    if(!room){
+        throw new Error('Room Not found')
+    }
+    const existingMember=await prisma.roomMember.findUnique({
+        where:{
+            roomId_userId:{
+                roomId:room.id,
+                userId:data.userId            
+            }
+        }
+    })
+    if(existingMember){
+        throw new Error('You are already the memeber')
+    }
+
+    const membership=await prisma.roomMember.create({
+        data:{
+            roomId:room.id,
+            userId:data.userId,
+        }
+}
+    )
+    return{
+        room,
+        membership
+    }
+
+
+
+}
 
 module.exports = {
     createRoom,
+    joinRoom
 };
