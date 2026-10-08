@@ -2,11 +2,9 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { joinRoom } from "../../../api/room.api.js";
-
-
 
 export function JoinRoomModal({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
@@ -15,13 +13,16 @@ export function JoinRoomModal({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log(e)
     console.log(roomId)
     const responce = await joinRoom(roomId)
     console.log(responce)
-    navigate(`/room/`);
+    const inviteCode=responce.data.room.inviteCode
+    navigate(`/room/${inviteCode}`);
   };
 
   const handleCodeChange = (index: number, value: string) => {

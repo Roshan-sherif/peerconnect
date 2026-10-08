@@ -1,5 +1,6 @@
 const { success } = require("zod");
-const { createRoom, joinRoom } = require("../services/room.service");
+const { createRoom, joinRoom ,getRoomUsers } = require("../services/room.service");
+const prisma = require("../config/prisma");
 
 const createRoomController= async (req,res)=>{
     console.log(req.user.id)
@@ -93,7 +94,59 @@ const joinRoomController=async(req,res)=>{
 
 
 }
+const getRoomUserController=async(req,res)=>{
+     try {
+
+        const user =req.user.id
+        const inviteCode=req.body
+
+        const result = await getRoomUsers({
+            user,
+            inviteCode
+        })
+        console.log(result)
+                return res.status(200).json({
+            success: true,
+            result,
+        });
+
+
+
+     } catch (error) {
+                console.error("Get room error:", error);
+
+
+        if (error.message === "Room not found") {
+
+            return res.status(404).json({
+                success: false,
+                message: "Room not found",
+            });
+        }
+
+
+        if (error.message === "You are not a member of this room") {
+
+            return res.status(403).json({
+                success: false,
+                message: "You are not a member of this room",
+            });
+        }
+
+
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch room",
+        });
+    }
+
+     
+
+}
+
+
 module.exports={
     createRoomController,
-    joinRoomController
+    joinRoomController,
+    getRoomUserController
 }

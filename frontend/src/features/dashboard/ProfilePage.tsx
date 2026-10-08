@@ -12,6 +12,7 @@ const ProfilePage = () => {
 useEffect(()=>{
   const fetchUserData=async()=>{
   const responce = await getUser()
+  console.log(responce)
 
   }
 })
