@@ -52,7 +52,7 @@ export const router = createBrowserRouter([
       },
 
       {
-        path: "room/:roomId",
+        path: "room/:inviteCode",
         element: <RoomPage />,
       },
     ],

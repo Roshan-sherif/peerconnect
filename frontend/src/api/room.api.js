@@ -6,6 +6,6 @@ export const generateRoom = (roomData) => API.post('/room/create',roomData,
 export const joinRoom=(inviteCode)=>API.post('/room/join',{inviteCode},
     {withCredentials:true}
 )
-export const getRoomById=(inviteCode)=>API.post('/room/members',{inviteCode},
+export const getRoomByInviteCode=(inviteCode)=>API.post('/room/members',{inviteCode},
     {withCredentials:true}
 )
