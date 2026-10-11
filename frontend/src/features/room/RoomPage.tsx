@@ -9,11 +9,21 @@ import {
 } from "react-resizable-panels";
 import {
   ArrowLeft,
+  Code2,
   Copy,
+  Download,
+  Hand,
+  Maximize2,
   MessageSquare,
+  Mic,
+  MonitorUp,
+  Paperclip,
+  PhoneOff,
   Play,
   Send,
+  Smile,
   Users,
+  Video,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -21,7 +31,7 @@ import { getRoomByInviteCode } from "../../api/room.api";
 import { socket } from "../../api/socket";
 
 export default function RoomPage() {
-  const  inviteCode  = useParams();
+  const { inviteCode } = useParams();
   const navigate = useNavigate();
 
   const [room, setRoom] = useState(null);
@@ -29,18 +39,23 @@ export default function RoomPage() {
   const [error, setError] = useState("");
 
   const [code, setCode] = useState(
-    '// Welcome to PeerConnect\n\nfunction main() {\n  console.log("Hello, PeerConnect!");\n}\n\nmain();'
+    '# Welcome to PeerConnect\n\nprint("Hello, PeerConnect!")\n'
   );
 
-  const [language, setLanguage] = useState("javascript");
-  const [chatInput, setChatInput] = useState("");
+  const [language, setLanguage] = useState("python");
+  const [chatMessage, setChatMessage] = useState("");
   const [messages, setMessages] = useState([]);
 
-  // Fetch room details using the invite code
+  const [allowEditing, setAllowEditing] = useState(true);
+  const [allowRunCode, setAllowRunCode] = useState(true);
+  const [allowChat, setAllowChat] = useState(true);
+
+  // ==========================================
+  // FETCH ROOM USING INVITE CODE
+  // ==========================================
+
   useEffect(() => {
     let cancelled = false;
-    console.log(inviteCode)
-    const invitCode=inviteCode.inviteCode
 
     const fetchRoom = async () => {
       if (!inviteCode) {
@@ -53,7 +68,7 @@ export default function RoomPage() {
         setIsLoading(true);
         setError("");
 
-        const response = await getRoomByInviteCode(invitCode);
+        const response = await getRoomByInviteCode(inviteCode);
         const data = response.data;
 
         if (!data.success || !data.result) {
@@ -88,7 +103,10 @@ export default function RoomPage() {
     };
   }, [inviteCode]);
 
-  // Connect to Socket.IO and join the room
+  // ==========================================
+  // SOCKET.IO CONNECTION
+  // ==========================================
+
   useEffect(() => {
     if (!inviteCode) return;
 
@@ -96,12 +114,13 @@ export default function RoomPage() {
       console.log("Socket connected:", socket.id);
 
       socket.emit("join-room", { inviteCode }, (response) => {
+        console.log(response)
         if (response?.success) {
-          console.log("Joined Socket.IO room successfully");
+          console.log("Joined socket room successfully");
           console.log("Database room ID:", response.roomId);
         } else {
           console.error(
-            "Failed to join Socket.IO room:",
+            "Failed to join socket room:",
             response?.message
           );
         }
@@ -114,6 +133,7 @@ export default function RoomPage() {
 
     socket.on("connect", handleConnect);
     socket.on("connect_error", handleConnectError);
+
     socket.connect();
 
     return () => {
@@ -123,286 +143,699 @@ export default function RoomPage() {
     };
   }, [inviteCode]);
 
-  // Copy invite code
-  const handleCopyInviteCode = async () => {
-    if (!room) return;
-
-    try {
-      await navigator.clipboard.writeText(room.inviteCode);
-    } catch (err) {
-      console.error("Could not copy invite code:", err);
-    }
-  };
-
-  // Send a local demo message
-  const handleSendMessage = (event) => {
-    event.preventDefault();
-
-    const trimmedMessage = chatInput.trim();
-    if (!trimmedMessage) return;
-
-    setMessages((previous) => [
-      ...previous,
-      {
-        id: `${Date.now()}-${Math.random()}`,
-        sender: "You",
-        message: trimmedMessage,
-        time: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      },
-    ]);
-
-    setChatInput("");
-  };
-
-  // Placeholder until a code execution backend is implemented
-  const handleRunCode = () => {
-    console.log("Code to execute:", { language, code });
-    alert("Code execution has not been connected yet.");
-  };
+  // ==========================================
+  // LOADING AND ERROR SCREENS
+  // ==========================================
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <p className="text-muted-foreground">Loading room...</p>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <p className="text-slate-500">Loading room...</p>
       </div>
     );
   }
 
   if (error || !room) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background p-6">
-        <h2 className="text-xl font-semibold">Unable to open room</h2>
-
-        <p className="text-sm text-muted-foreground">
-          {error || "Room not found"}
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-slate-50">
+        <p className="text-red-500">
+          {error || "Unable to open room"}
         </p>
 
-        <Button onClick={() => navigate("/dashboard")}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
+        <Button
+          onClick={() => navigate("/dashboard")}
+          className="px-4 py-2"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Dashboard
         </Button>
       </div>
     );
   }
 
+  // ==========================================
+  // ROOM PARTICIPANTS
+  // ==========================================
+
   const participants = (room.members || []).map((member) => ({
     id: member.user.id,
     name: member.user.name,
     email: member.user.email,
     isHost: member.role === "OWNER",
+    isOnline: true,
   }));
 
+  // ==========================================
+  // CHAT MESSAGE
+  // ==========================================
+
+  const sendMessage = (event) => {
+    event?.preventDefault();
+
+    if (!allowChat || !chatMessage.trim()) return;
+
+    setMessages((previous) => [
+      ...previous,
+      {
+        id: `${Date.now()}-${Math.random()}`,
+        sender: "You",
+        time: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        text: chatMessage.trim(),
+      },
+    ]);
+
+    setChatMessage("");
+  };
+
+  // ==========================================
+  // COPY INVITE CODE
+  // ==========================================
+
+  const copyInviteCode = async () => {
+    try {
+      await navigator.clipboard.writeText(room.inviteCode);
+    } catch (err) {
+      console.error("Unable to copy invite code:", err);
+    }
+  };
+
+  // ==========================================
+  // COPY EDITOR CONTENT
+  // ==========================================
+
+  const copyCode = async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+    } catch (err) {
+      console.error("Unable to copy code:", err);
+    }
+  };
+
+  // ==========================================
+  // DOWNLOAD CODE
+  // ==========================================
+
+  const downloadCode = () => {
+    const extensions = {
+      python: "py",
+      javascript: "js",
+      java: "java",
+      cpp: "cpp",
+    };
+
+    const extension = extensions[language] || "txt";
+    const blob = new Blob([code], {
+      type: "text/plain;charset=utf-8",
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = `main.${extension}`;
+    link.click();
+
+    URL.revokeObjectURL(url);
+  };
+
+  // ==========================================
+  // RUN CODE PLACEHOLDER
+  // ==========================================
+
+  const runCode = () => {
+    if (!allowRunCode) return;
+
+    console.log("Code execution request:", { language, code });
+    alert("Code execution backend is not connected yet.");
+  };
+
+  // ==========================================
+  // RETURN UI
+  // ==========================================
+
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-background">
-      {/* Header */}
-      <header className="flex min-h-16 items-center justify-between gap-4 border-b px-4 py-3">
-        <div className="flex min-w-0 items-center gap-3">
+    <div className="h-screen flex flex-col bg-slate-50 overflow-hidden">
+
+      {/* ==========================================
+          TOP NAVBAR
+      ========================================== */}
+
+      <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 shrink-0">
+        <div className="flex items-center gap-4">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate("/dashboard")}
-            aria-label="Back to dashboard"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="w-4 h-4" />
           </Button>
 
-          <div className="min-w-0">
-            <h1 className="truncate font-semibold">{room.name}</h1>
-            <p className="truncate text-xs text-muted-foreground">
-              {room.description || "Collaborative coding room"}
-            </p>
+          <div className="flex items-center gap-2">
+            <div className="bg-primary/10 p-1 rounded">
+              <Code2 className="w-5 h-5 text-primary" />
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-slate-900">
+                  {room.name}
+                </span>
+
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-700 uppercase tracking-wider">
+                  Live
+                </span>
+              </div>
+
+              {room.description && (
+                <p className="text-[10px] text-slate-500 truncate max-w-[250px]">
+                  {room.description}
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="flex shrink-0 items-center gap-2">
-          <div className="hidden items-center gap-2 rounded-md border px-3 py-2 sm:flex">
-            <span className="text-xs text-muted-foreground">
-              Invite code:
-            </span>
-            <span className="font-mono text-sm font-medium">
-              {room.inviteCode}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 text-sm text-slate-500 mr-2">
+            <span className="flex items-center gap-1">
+              <Users className="w-4 h-4" />
+              {participants.length}
             </span>
           </div>
 
           <Button
             variant="outline"
             size="sm"
-            onClick={handleCopyInviteCode}
+            className="hidden sm:flex"
+            onClick={copyInviteCode}
           >
-            <Copy className="mr-2 h-4 w-4" />
-            Copy code
+            <Copy className="w-4 h-4 mr-2" />
+            Copy Invite
+          </Button>
+
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => navigate("/dashboard")}
+          >
+            Leave Room
           </Button>
         </div>
       </header>
 
-      {/* Main content */}
-      <main className="min-h-0 flex-1">
-        <PanelGroup direction="horizontal">
-          {/* Participants */}
-          <Panel defaultSize={20} minSize={15} maxSize={30}>
-            <div className="flex h-full flex-col border-r">
-              <div className="flex items-center gap-2 border-b p-4">
-                <Users className="h-4 w-4" />
-                <h2 className="font-semibold">Participants</h2>
+      {/* ==========================================
+          MAIN WORKSPACE
+      ========================================== */}
 
-                <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-xs">
-                  {participants.length}
-                </span>
-              </div>
+      <div className="flex-1 min-h-0 overflow-hidden">
+        <PanelGroup direction="horizontal" className="h-full">
 
-              <div className="flex-1 space-y-2 overflow-y-auto p-3">
-                {participants.map((participant) => (
-                  <div
-                    key={participant.id}
-                    className="flex items-center gap-3 rounded-lg p-2 hover:bg-muted"
-                  >
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 font-semibold">
-                      {participant.name?.charAt(0).toUpperCase() || "U"}
-                    </div>
+          {/* ==========================================
+              LEFT SIDEBAR: PARTICIPANTS
+          ========================================== */}
 
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium">
-                        {participant.name}
-                      </p>
-
-                      <p className="text-xs text-muted-foreground">
-                        {participant.isHost ? "Room owner" : "Member"}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="border-t p-3 text-xs text-muted-foreground">
-                Online presence will be added next.
-              </div>
+          <Panel
+            defaultSize={15}
+            minSize={12}
+            maxSize={20}
+            className="bg-white border-r border-slate-200 flex flex-col"
+          >
+            <div className="p-3 border-b border-slate-100 font-semibold text-sm flex items-center justify-between">
+              <span>Participants ({participants.length})</span>
             </div>
-          </Panel>
 
-          <PanelResizeHandle className="w-1 bg-border hover:bg-primary/50" />
-
-          {/* Editor and chat */}
-          <Panel defaultSize={80} minSize={45}>
-            <PanelGroup direction="horizontal">
-              {/* Code editor */}
-              <Panel defaultSize={70} minSize={40}>
-                <div className="flex h-full flex-col">
-                  <div className="flex flex-wrap items-center justify-between gap-3 border-b p-3">
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-semibold">
-                        Code Editor
-                      </span>
-
-                      <select
-                        className="rounded-md border bg-background px-2 py-1.5 text-sm"
-                        value={language}
-                        onChange={(event) =>
-                          setLanguage(event.target.value)
-                        }
-                      >
-                        <option value="javascript">JavaScript</option>
-                        <option value="typescript">TypeScript</option>
-                        <option value="python">Python</option>
-                        <option value="java">Java</option>
-                        <option value="cpp">C++</option>
-                      </select>
-                    </div>
-
-                    <Button size="sm" onClick={handleRunCode}>
-                      <Play className="mr-2 h-4 w-4" />
-                      Run
-                    </Button>
-                  </div>
-
-                  <div className="min-h-0 flex-1">
-                    <Editor
-                      height="100%"
-                      language={language}
-                      value={code}
-                      onChange={(value) => setCode(value ?? "")}
-                      theme="vs-light"
-                      options={{
-                        minimap: { enabled: false },
-                        fontSize: 14,
-                        automaticLayout: true,
-                        scrollBeyondLastLine: false,
-                        wordWrap: "on",
-                      }}
+            <div className="flex-1 overflow-y-auto p-2 space-y-1">
+              {participants.map((participant) => (
+                <div
+                  key={participant.id}
+                  className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg group cursor-pointer"
+                >
+                  <div className="relative shrink-0">
+                    <img
+                      src={`https://i.pravatar.cc/150?u=${participant.id}`}
+                      alt={participant.name}
+                      className="w-8 h-8 rounded-full bg-slate-100"
                     />
-                  </div>
-                </div>
-              </Panel>
 
-              <PanelResizeHandle className="w-1 bg-border hover:bg-primary/50" />
-
-              {/* Chat */}
-              <Panel defaultSize={30} minSize={22}>
-                <div className="flex h-full flex-col border-l">
-                  <div className="flex items-center gap-2 border-b p-4">
-                    <MessageSquare className="h-4 w-4" />
-                    <h2 className="font-semibold">Room Chat</h2>
-                  </div>
-
-                  <div className="flex-1 space-y-3 overflow-y-auto p-3">
-                    {messages.length === 0 ? (
-                      <p className="py-8 text-center text-sm text-muted-foreground">
-                        No messages yet. Start the conversation.
-                      </p>
-                    ) : (
-                      messages.map((message) => (
-                        <div
-                          key={message.id}
-                          className="rounded-lg bg-muted p-3"
-                        >
-                          <div className="mb-1 flex items-center justify-between gap-2">
-                            <span className="text-sm font-semibold">
-                              {message.sender}
-                            </span>
-
-                            <span className="text-xs text-muted-foreground">
-                              {message.time}
-                            </span>
-                          </div>
-
-                          <p className="break-words text-sm">
-                            {message.message}
-                          </p>
-                        </div>
-                      ))
+                    {participant.isOnline && (
+                      <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full" />
                     )}
                   </div>
 
-                  <form
-                    className="flex gap-2 border-t p-3"
-                    onSubmit={handleSendMessage}
-                  >
-                    <input
-                      className="min-w-0 flex-1 rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-                      placeholder="Type a message..."
-                      value={chatInput}
-                      onChange={(event) =>
-                        setChatInput(event.target.value)
-                      }
-                    />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1">
+                      <p className="text-sm font-medium text-slate-900 truncate">
+                        {participant.name}
+                      </p>
 
-                    <Button
-                      type="submit"
-                      size="icon"
-                      aria-label="Send message"
-                      disabled={!chatInput.trim()}
+                      {participant.isHost && (
+                        <span className="text-[10px] text-primary bg-primary/10 px-1 rounded">
+                          Host
+                        </span>
+                      )}
+                    </div>
+
+                    <p className="text-xs text-slate-500">
+                      {participant.isOnline ? "Online" : "Offline"}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* HOST CONTROLS */}
+
+            <div className="p-4 border-t border-slate-200 bg-slate-50/50 space-y-4">
+              <h4 className="text-xs font-semibold text-slate-500 uppercase">
+                Host Controls
+              </h4>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-slate-700">
+                    Allow Editing
+                  </span>
+
+                  <input
+                    type="checkbox"
+                    checked={allowEditing}
+                    onChange={(event) =>
+                      setAllowEditing(event.target.checked)
+                    }
+                    className="toggle-checkbox"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-slate-700">
+                    Allow Run Code
+                  </span>
+
+                  <input
+                    type="checkbox"
+                    checked={allowRunCode}
+                    onChange={(event) =>
+                      setAllowRunCode(event.target.checked)
+                    }
+                    className="toggle-checkbox"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-slate-700">
+                    Allow Chat
+                  </span>
+
+                  <input
+                    type="checkbox"
+                    checked={allowChat}
+                    onChange={(event) =>
+                      setAllowChat(event.target.checked)
+                    }
+                    className="toggle-checkbox"
+                  />
+                </div>
+              </div>
+
+              <Button
+                variant="outline"
+                className="w-full text-destructive hover:bg-destructive/10 border-destructive/20 h-8 text-xs"
+                onClick={() =>
+                  alert("Participant removal is not implemented yet.")
+                }
+              >
+                Kick Participant
+              </Button>
+            </div>
+          </Panel>
+
+          <PanelResizeHandle className="w-1.5 bg-slate-100 hover:bg-primary/20 transition-colors cursor-col-resize active:bg-primary" />
+
+          {/* ==========================================
+              CENTER PANEL: VIDEO + OUTPUT
+          ========================================== */}
+
+          <Panel
+            defaultSize={35}
+            minSize={25}
+            className="flex flex-col bg-slate-100"
+          >
+            <PanelGroup direction="vertical">
+
+              {/* VIDEO CALL */}
+
+              <Panel
+                defaultSize={60}
+                minSize={30}
+                className="flex flex-col relative bg-slate-900"
+              >
+                <div className="absolute top-3 left-3 z-10 text-white font-medium text-sm flex items-center gap-2">
+                  <Video className="w-4 h-4" />
+                  Video Call
+                </div>
+
+                <div className="flex-1 min-h-0 p-2 grid grid-cols-2 grid-rows-2 gap-2 mt-8">
+                  {participants.slice(0, 4).map((participant) => (
+                    <div
+                      key={participant.id}
+                      className="bg-slate-800 rounded-lg relative overflow-hidden flex items-center justify-center"
                     >
-                      <Send className="h-4 w-4" />
-                    </Button>
-                  </form>
+                      <img
+                        src={`https://i.pravatar.cc/500?u=${participant.id}`}
+                        className="absolute inset-0 w-full h-full object-cover opacity-70"
+                        alt={participant.name}
+                      />
+
+                      <div className="absolute bottom-2 left-2 bg-black/50 px-2 py-1 rounded text-white text-xs backdrop-blur-sm">
+                        {participant.name}
+                        {participant.isHost && " (Host)"}
+                      </div>
+
+                      <div className="absolute bottom-2 right-2 bg-black/50 p-1.5 rounded-full backdrop-blur-sm">
+                        <Mic className="w-3 h-3 text-white" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* VIDEO CONTROLS */}
+
+                <div className="h-14 shrink-0 bg-slate-900 border-t border-slate-800 flex items-center justify-center gap-3">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-white hover:bg-slate-800 rounded-full h-10 w-10 bg-slate-800"
+                    onClick={() =>
+                      alert("Microphone integration is not implemented yet.")
+                    }
+                  >
+                    <Mic className="w-5 h-5" />
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-white hover:bg-slate-800 rounded-full h-10 w-10 bg-slate-800"
+                    onClick={() =>
+                      alert("Camera integration is not implemented yet.")
+                    }
+                  >
+                    <Video className="w-5 h-5" />
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-white hover:bg-slate-800 rounded-full h-10 w-10"
+                    onClick={() =>
+                      alert("Screen sharing is not implemented yet.")
+                    }
+                  >
+                    <MonitorUp className="w-5 h-5" />
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-white hover:bg-slate-800 rounded-full h-10 w-10"
+                    onClick={() =>
+                      alert("Raise hand is not implemented yet.")
+                    }
+                  >
+                    <Hand className="w-5 h-5" />
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-white hover:bg-red-600/90 rounded-full h-10 w-10 bg-red-600"
+                    onClick={() => navigate("/dashboard")}
+                  >
+                    <PhoneOff className="w-5 h-5" />
+                  </Button>
+                </div>
+              </Panel>
+
+              <PanelResizeHandle className="h-1.5 bg-slate-200 hover:bg-primary/20 transition-colors cursor-row-resize active:bg-primary" />
+
+              {/* COMPILER OUTPUT */}
+
+              <Panel
+                defaultSize={40}
+                minSize={20}
+                className="bg-white flex flex-col"
+              >
+                <div className="flex items-center gap-4 px-4 h-10 border-b border-slate-100 text-sm font-medium">
+                  <button className="text-primary border-b-2 border-primary h-full px-1">
+                    Output
+                  </button>
+
+                  <button
+                    className="text-slate-500 hover:text-slate-900 h-full px-1"
+                    onClick={() =>
+                      alert("Terminal integration is not implemented yet.")
+                    }
+                  >
+                    Terminal
+                  </button>
+
+                  <button
+                    className="text-slate-500 hover:text-slate-900 h-full px-1"
+                    onClick={() =>
+                      alert("Compiler error reporting is not implemented yet.")
+                    }
+                  >
+                    Errors
+                  </button>
+
+                  <button
+                    className="ml-auto text-xs text-slate-400 hover:text-slate-900"
+                    onClick={() => {}}
+                  >
+                    Clear
+                  </button>
+                </div>
+
+                <div className="flex-1 p-4 bg-slate-50 font-mono text-sm overflow-y-auto">
+                  <div className="text-slate-400">
+                    No code executed yet.
+                  </div>
                 </div>
               </Panel>
             </PanelGroup>
           </Panel>
+
+          <PanelResizeHandle className="w-1.5 bg-slate-200 hover:bg-primary/20 transition-colors cursor-col-resize active:bg-primary" />
+
+          {/* ==========================================
+              CODE EDITOR
+          ========================================== */}
+
+          <Panel
+            defaultSize={35}
+            minSize={20}
+            className="bg-white flex flex-col border-l border-slate-200"
+          >
+            <div className="h-10 border-b border-slate-200 flex items-center justify-between px-3 bg-slate-50">
+              <div className="flex items-center gap-2">
+                <div className="px-3 py-1 bg-white border border-slate-200 rounded-md text-sm font-medium text-slate-700 flex items-center gap-2 shadow-sm">
+                  main.
+                  {language === "javascript"
+                    ? "js"
+                    : language === "cpp"
+                    ? "cpp"
+                    : language === "java"
+                    ? "java"
+                    : "py"}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <select
+                  value={language}
+                  onChange={(event) => setLanguage(event.target.value)}
+                  className="h-7 text-xs border border-slate-200 rounded px-2 outline-none"
+                >
+                  <option value="python">Python</option>
+                  <option value="javascript">JavaScript</option>
+                  <option value="cpp">C++</option>
+                  <option value="java">Java</option>
+                </select>
+
+                <Button
+                  size="sm"
+                  className="h-7 px-3 bg-primary hover:bg-primary/90 text-xs"
+                  onClick={runCode}
+                  disabled={!allowRunCode}
+                >
+                  <Play className="w-3 h-3 mr-1" />
+                  Run
+                </Button>
+
+                <div className="w-px h-4 bg-slate-300 mx-1" />
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={copyCode}
+                  title="Copy code"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={downloadCode}
+                  title="Download code"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() =>
+                    alert("Editor fullscreen is not implemented yet.")
+                  }
+                  title="Maximize editor"
+                >
+                  <Maximize2 className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex-1 min-h-0 w-full relative">
+              <Editor
+                height="100%"
+                language={language}
+                theme="light"
+                value={code}
+                onChange={(value) => setCode(value || "")}
+                options={{
+                  minimap: { enabled: false },
+                  fontSize: 14,
+                  wordWrap: "on",
+                  lineNumbersMinChars: 3,
+                  folding: true,
+                  scrollBeyondLastLine: false,
+                  automaticLayout: true,
+                  readOnly: !allowEditing,
+                }}
+              />
+            </div>
+          </Panel>
+
+          <PanelResizeHandle className="w-1.5 bg-slate-200 hover:bg-primary/20 transition-colors cursor-col-resize active:bg-primary" />
+
+          {/* ==========================================
+              CHAT
+          ========================================== */}
+
+          <Panel
+            defaultSize={15}
+            minSize={15}
+            maxSize={25}
+            className="bg-white flex flex-col border-l border-slate-200"
+          >
+            <div className="p-3 border-b border-slate-100 font-semibold text-sm flex items-center gap-2 shrink-0">
+              <MessageSquare className="w-4 h-4 text-slate-500" />
+              Chat
+            </div>
+
+            {/* MESSAGES */}
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {messages.map((message) => (
+                <div key={message.id} className="flex gap-3">
+                  <img
+                    src={`https://i.pravatar.cc/150?u=${message.id}`}
+                    alt={message.sender}
+                    className="w-8 h-8 rounded-full shrink-0"
+                  />
+
+                  <div className="min-w-0">
+                    <div className="flex items-baseline gap-2 mb-1">
+                      <span className="font-semibold text-sm text-slate-900">
+                        {message.sender}
+                      </span>
+
+                      <span className="text-[10px] text-slate-400">
+                        {message.time}
+                      </span>
+                    </div>
+
+                    <p className="text-sm text-slate-700 bg-slate-100 rounded-tr-xl rounded-b-xl px-3 py-2 break-words">
+                      {message.text}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* CHAT INPUT */}
+
+            <div className="p-3 border-t border-slate-200 bg-white shrink-0">
+              <form
+                className="relative flex items-center border border-slate-200 rounded-xl bg-slate-50 overflow-hidden focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all"
+                onSubmit={sendMessage}
+              >
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-10 w-10 text-slate-400 hover:text-slate-600 rounded-none shrink-0"
+                  onClick={() =>
+                    alert("File attachments are not implemented yet.")
+                  }
+                >
+                  <Paperclip className="w-4 h-4" />
+                </Button>
+
+                <input
+                  type="text"
+                  value={chatMessage}
+                  onChange={(event) =>
+                    setChatMessage(event.target.value)
+                  }
+                  placeholder={
+                    allowChat ? "Type a message..." : "Chat is disabled"
+                  }
+                  disabled={!allowChat}
+                  className="flex-1 min-w-0 bg-transparent border-none outline-none text-sm px-2 py-3"
+                />
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-10 w-10 text-slate-400 hover:text-slate-600 rounded-none shrink-0"
+                  onClick={() =>
+                    alert("Emoji picker is not implemented yet.")
+                  }
+                >
+                  <Smile className="w-4 h-4" />
+                </Button>
+
+                <Button
+                  type="submit"
+                  size="icon"
+                  disabled={!allowChat || !chatMessage.trim()}
+                  className="h-10 w-10 rounded-none shrink-0 text-primary hover:bg-primary/10 hover:text-primary bg-transparent"
+                >
+                  <Send className="w-4 h-4" />
+                </Button>
+              </form>
+            </div>
+          </Panel>
         </PanelGroup>
-      </main>
+      </div>
     </div>
   );
 }
