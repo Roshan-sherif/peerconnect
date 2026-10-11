@@ -104,7 +104,6 @@ const getRoomUserController=async(req,res)=>{
             user,
             inviteCode
         })
-        console.log(result)
                 return res.status(200).json({
             success: true,
             result,

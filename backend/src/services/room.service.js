@@ -121,7 +121,6 @@ const getRoomUsers=async (data)=>{
         }
     })
 
-    console.log(room)
     if(!room){
         throw new Error('Room not found')
     }
@@ -135,7 +134,6 @@ const getRoomUsers=async (data)=>{
         throw new Error("You are not a member of this room");
     }
 
-    console.log(room)
     return room
 
 }

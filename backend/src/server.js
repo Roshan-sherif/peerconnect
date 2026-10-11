@@ -5,6 +5,7 @@ const { Server } = require("socket.io");
 
 const app = require("./app");
 const registerSocketHandlers = require("./socket");
+const socketAuth = require("./middleware/auth.socket");
 
 const PORT = process.env.PORT || 5000;
 
@@ -18,7 +19,7 @@ const io = new Server(server, {
         credentials: true,
     },
 });
-
+io.use(socketAuth)
 registerSocketHandlers(io)
 
 server.listen(PORT, () => {
